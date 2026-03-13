@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Alkitab Manuskrip Kuno</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --parchment:#d4c4a0;
+  --parchment-dark:#b8a07d;
+  --parchment-light:#e8ddc8;
+  --ink:#2a1810;
+  --ink-fade:#5a4030;
+  --gold:#8b6f47;
+  --gold-bright:#b89968;
+  --red:#8b3a3a;
+  --border:#a08562;
+  --green:#4a8c5e;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+
+body{
+  background:#1a1410;
+  font-family:'Crimson Text',serif;
+  color:var(--ink);
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* TEKSTUR PERKAMEN */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.015) 2px,rgba(0,0,0,.015) 4px),
+    repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(0,0,0,.015) 2px,rgba(0,0,0,.015) 4px);
+  pointer-events:none;
+  z-index:100;
+  opacity:.8;
+}
+
+/* OVERLAY DOWNLOAD */
+#dlOverlay{
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  background:linear-gradient(135deg,var(--parchment-light),var(--parchment));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+#dlOverlay.hidden{display:none}
+
+.dl-box{
+  max-width:500px;
+  width:100%;
+  text-align:center;
+  background:rgba(255,255,255,.3);
+  padding:40px 30px;
+  border:2px solid var(--border);
+  border-radius:8px;
+  box-shadow:0 10px 40px rgba(0,0,0,.4);
+}
+
+.dl-cross{font-size:3rem;color:var(--red);margin-bottom:20px}
+.dl-title{font-family:'IM Fell English',serif;font-size:1.8rem;color:var(--red);margin-bottom:10px}
+.dl-sub{font-size:.95rem;color:var(--ink-fade);font-style:italic;margin-bottom:30px;line-height:1.6}
+
+.dl-ver-label{
+  font-size:.7rem;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--ink-fade);
+  margin-bottom:12px;
+  font-weight:600;
+}
+
+.dl-ver-row{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  margin-bottom:30px;
+  flex-wrap:wrap;
+}
+
+.dl-ver-btn{
+  padding:10px 18px;
+  border:2px solid var(--border);
+  border-radius:4px;
+  background:rgba(255,255,255,.2);
+  color:var(--ink);
+  font-family:'Crimson Text',serif;
+  font-size:.85rem;
+  cursor:pointer;
+  transition:all .3s;
+}
+
+.dl-ver-btn.sel{
+  border-color:var(--gold);
+  background:var(--gold);
+  color:var(--parchment);
+  box-shadow:0 3px 10px rgba(139,111,71,.4);
+}
+
+.dl-start-btn{
+  width:100%;
+  padding:16px;
+  border:2px solid var(--gold);
+  background:var(--gold);
+  color:var(--parchment);
+  font-family:'IM Fell English',serif;
+  font-size:1rem;
+  letter-spacing:.15em;
+  cursor:pointer;
+  border-radius:4px;
+  transition:all .3s;
+  margin-bottom:12px;
+}
+
+.dl-start-btn:hover{
+  background:var(--gold-bright);
+  transform:translateY(-2px);
+  box-shadow:0 5px 15px rgba(139,111,71,.5);
+}
+
+.dl-skip{
+  font-size:.8rem;
+  color:var(--ink-fade);
+  cursor:pointer;
+  text-decoration:underline;
+  opacity:.7;
+}
+
+.dl-skip:hover{opacity:1}
+
+/* PROGRESS */
+.dl-progress{display:none}
+.dl-progress.show{display:block}
+
+.dl-prog-title{
+  font-family:'IM Fell English',serif;
+  font-size:1rem;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+
+.dl-prog-book{
+  font-size:.85rem;
+  color:var(--ink-fade);
+  font-style:italic;
+  margin-bottom:20px;
+  min-height:1.2em;
+}
+
+.prog-track{
+  width:100%;
+  height:8px;
+  background:rgba(0,0,0,.15);
+  border-radius:4px;
+  overflow:hidden;
+  margin-bottom:10px;
+  border:1px solid var(--border);
+}
+
+.prog-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--gold),var(--gold-bright));
+  border-radius:4px;
+  transition:width .3s;
+  width:0%;
+}
+
+.prog-nums{
+  display:flex;
+  justify-content:space-between;
+  font-size:.7rem;
+  color:var(--ink-fade);
+  margin-bottom:20px;
+}
+
+.dl-ver-progress{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:25px;
+}
+
+.ver-prog-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.ver-prog-label{
+  font-size:.7rem;
+  text-transform:uppercase;
+  width:50px;
+  color:var(--ink);
+  font-weight:600;
+}
+
+.ver-prog-track{
+  flex:1;
+  height:4px;
+  background:rgba(0,0,0,.15);
+  border-radius:2px;
+  overflow:hidden;
+}
+
+.ver-prog-fill{
+  height:100%;
+  border-radius:2px;
+  width:0%;
+  transition:width .2s;
+}
+
+.ver-prog-fill.tb{background:var(--gold)}
+.ver-prog-fill.tl{background:var(--red)}
+.ver-prog-fill.jawa{background:var(--green)}
+
+.ver-prog-num{
+  font-size:.65rem;
+  color:var(--ink-fade);
+  width:40px;
+  text-align:right;
+}
+
+.dl-cancel{
+  font-size:.75rem;
+  color:var(--ink-fade);
+  cursor:pointer;
+  opacity:.6;
+  text-decoration:underline;
+}
+
+.dl-cancel:hover{opacity:1}
+
+.dl-done-btn{
+  display:none;
+  width:100%;
+  padding:14px;
+  border:2px solid var(--green);
+  background:var(--green);
+  color:white;
+  font-family:'IM Fell English',serif;
+  font-size:.95rem;
+  cursor:pointer;
+  border-radius:4px;
+  margin-top:15px;
+}
+
+.dl-done-btn.show{display:block}
+
+.dl-err{
+  font-size:.75rem;
+  color:var(--red);
+  margin-top:10px;
+  font-style:italic;
+}
+
+/* CONTAINER */
+.manuscript-container{
+  max-width:100%;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+}
+
+/* GULUNGAN - DESKTOP ONLY */
+.scroll-left,.scroll-right{
+  position:fixed;
+  top:0;
+  bottom:0;
+  width:70px;
+  background:linear-gradient(to right,#3a2410,#5a4428,#3a2410);
+  box-shadow:inset -8px 0 25px rgba(0,0,0,.5);
+  z-index:5;
+  border-right:2px solid #2a1a08;
+}
+
+.scroll-left{left:0}
+
+.scroll-right{
+  right:0;
+  background:linear-gradient(to left,#3a2410,#5a4428,#3a2410);
+  box-shadow:inset 8px 0 25px rgba(0,0,0,.5);
+  border-left:2px solid #2a1a08;
+  border-right:none;
+}
+
+.scroll-left::before,.scroll-right::before{
+  content:'';
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  width:45px;
+  height:100%;
+  background:repeating-linear-gradient(0deg,#4a3420,#4a3420 5px,#5a4428 5px,#5a4428 10px);
+  box-shadow:inset 0 0 20px rgba(0,0,0,.4);
+}
+
+.scroll-ornament{
+  position:absolute;
+  width:55px;
+  height:55px;
+  left:50%;
+  transform:translateX(-50%);
+  background:radial-gradient(circle,var(--gold-bright),var(--gold));
+  border-radius:50%;
+  box-shadow:0 4px 15px rgba(0,0,0,.6),inset 0 2px 5px rgba(255,255,255,.3);
+}
+
+.scroll-ornament.top{top:25px}
+.scroll-ornament.bottom{bottom:25px}
+
+.scroll-ornament::after{
+  content:'✠';
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.6rem;
+  color:var(--ink);
+}
+
+/* HALAMAN PERKAMEN */
+.parchment-page{
+  background:linear-gradient(135deg,var(--parchment-light) 0%,var(--parchment) 50%,var(--parchment-dark) 100%);
+  margin:0 80px;
+  padding:50px 60px;
+  border:2px solid var(--border);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,.6),
+    inset 0 0 80px rgba(0,0,0,.08);
+  position:relative;
+  min-height:100vh;
+}
+
+/* HEADER */
+.manuscript-header{
+  text-align:center;
+  margin-bottom:40px;
+  padding-bottom:25px;
+  border-bottom:3px double var(--gold);
+}
+
+.manuscript-title{
+  font-family:'IM Fell English',serif;
+  font-size:2.5rem;
+  color:var(--red);
+  margin-bottom:12px;
+  text-shadow:2px 2px 4px rgba(0,0,0,.2);
+}
+
+.manuscript-subtitle{
+  font-size:1rem;
+  color:var(--ink-fade);
+  font-style:italic;
+}
+
+/* TOP BAR */
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px;
+  padding:12px;
+  background:rgba(139,111,71,.15);
+  border:1px solid var(--border);
+  border-radius:4px;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.menu-btn{
+  display:none;
+  padding:8px 16px;
+  background:var(--gold);
+  border:2px solid var(--border);
+  color:var(--parchment);
+  font-size:.85rem;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+.breadcrumb{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.8rem;
+  color:var(--ink-fade);
+  flex-wrap:wrap;
+}
+
+.breadcrumb .bc-cur{color:var(--red);font-weight:600}
+
+.trans-buttons{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.trans-btn{
+  padding:6px 14px;
+  border:2px solid var(--border);
+  border-radius:4px;
+  background:rgba(255,255,255,.2);
+  color:var(--ink);
+  font-size:.75rem;
+  cursor:pointer;
+  transition:all .3s;
+  position:relative;
+}
+
+.trans-btn.active{
+  border-color:var(--gold);
+  background:var(--gold);
+  color:var(--parchment);
+}
+
+.trans-btn .dl-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  position:absolute;
+  top:3px;
+  right:3px;
+}
+
+.trans-btn .dl-dot.ready{background:var(--green);box-shadow:0 0 4px var(--green)}
+.trans-btn .dl-dot.missing{background:var(--red)}
+
+/* SIDEBAR */
+.book-sidebar{
+  position:fixed;
+  left:70px;
+  top:20px;
+  bottom:20px;
+  width:260px;
+  background:linear-gradient(135deg,rgba(212,196,160,.97),rgba(184,160,125,.97));
+  border:2px solid var(--border);
+  border-radius:6px;
+  padding:18px;
+  overflow-y:auto;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
+  z-index:10;
+  transition:transform .3s;
+}
+
+.book-sidebar::-webkit-scrollbar{width:6px}
+.book-sidebar::-webkit-scrollbar-thumb{
+  background:var(--gold);
+  border-radius:3px;
+}
+
+.sidebar-header{
+  text-align:center;
+  margin-bottom:18px;
+  padding-bottom:12px;
+  border-bottom:2px solid var(--gold);
+}
+
+.sidebar-title{
+  font-family:'IM Fell English',serif;
+  font-size:1.3rem;
+  color:var(--red);
+  margin-bottom:4px;
+}
+
+.sidebar-subtitle{
+  font-size:.8rem;
+  color:var(--ink-fade);
+  font-style:italic;
+}
+
+.testament-tabs{
+  display:flex;
+  gap:5px;
+  margin-bottom:15px;
+}
+
+.tab-btn{
+  flex:1;
+  padding:8px;
+  background:rgba(255,255,255,.2);
+  border:2px solid var(--border);
+  color:var(--ink);
+  font-size:.75rem;
+  cursor:pointer;
+  border-radius:4px;
+  transition:all .3s;
+}
+
+.tab-btn.active{
+  background:var(--gold);
+  color:var(--parchment);
+  border-color:var(--gold);
+}
+
+.search-input{
+  width:100%;
+  padding:8px;
+  background:rgba(255,255,255,.3);
+  border:2px solid var(--border);
+  border-radius:4px;
+  color:var(--ink);
+  font-size:.85rem;
+  margin-bottom:12px;
+}
+
+.search-input::placeholder{color:var(--ink-fade);opacity:.6}
+
+.book-list{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.book-item{
+  padding:8px 12px;
+  cursor:pointer;
+  border-left:3px solid transparent;
+  transition:all .3s;
+  font-size:.9rem;
+  background:rgba(255,255,255,.15);
+  border-radius:0 4px 4px 0;
+  display:flex;
+  justify-content:space-between;
+}
+
+.book-item:hover{
+  background:rgba(139,111,71,.25);
+  border-left-color:var(--gold);
+  padding-left:16px;
+}
+
+.book-item.active{
+  background:var(--gold);
+  color:var(--parchment);
+  border-left-color:var(--red);
+  font-weight:600;
+}
+
+.book-chapters{
+  font-size:.7rem;
+  opacity:.7;
+}
+
+/* MAIN CONTENT */
+.main-content{
+  margin-left:280px;
+}
+
+.chapter-nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px;
+  padding:12px;
+  background:rgba(139,111,71,.12);
+  border:1px solid var(--border);
+  border-radius:4px;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.nav-btn{
+  padding:10px 18px;
+  background:var(--gold);
+  border:2px solid var(--border);
+  color:var(--parchment);
+  font-size:.85rem;
+  cursor:pointer;
+  border-radius:4px;
+  transition:all .3s;
+}
+
+.nav-btn:hover:not(:disabled){
+  background:var(--gold-bright);
+  transform:translateY(-2px);
+}
+
+.nav-btn:disabled{
+  opacity:.3;
+  cursor:not-allowed;
+}
+
+.chapter-indicator{
+  font-family:'IM Fell English',serif;
+  font-size:1rem;
+  color:var(--red);
+  font-weight:600;
+}
+
+.chapter-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(45px,1fr));
+  gap:6px;
+  margin-bottom:25px;
+  padding:15px;
+  background:rgba(139,111,71,.08);
+  border:1px solid var(--border);
+  border-radius:4px;
+}
+
+.ch-btn{
+  aspect-ratio:1;
+  border:2px solid var(--border);
+  border-radius:4px;
+  background:rgba(255,255,255,.2);
+  color:var(--ink);
+  font-size:.8rem;
+  cursor:pointer;
+  transition:all .3s;
+}
+
+.ch-btn:hover{
+  background:var(--gold);
+  color:var(--parchment);
+  border-color:var(--gold);
+}
+
+.ch-btn.active{
+  background:var(--red);
+  color:var(--parchment);
+  border-color:var(--red);
+}
+
+.chapter-title-main{
+  font-family:'IM Fell English',serif;
+  font-size:1.6rem;
+  color:var(--red);
+  text-align:center;
+  margin-bottom:30px;
+}
+
+/* AYAT */
+.verse-container{
+  margin-bottom:22px;
+  animation:slideIn .5s ease backwards;
+}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateX(-15px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+.verse-number{
+  display:inline-block;
+  width:32px;
+  height:32px;
+  background:radial-gradient(circle,var(--gold-bright),var(--gold));
+  color:var(--parchment);
+  text-align:center;
+  line-height:32px;
+  font-weight:600;
+  font-size:.85rem;
+  border-radius:50%;
+  margin-right:12px;
+  float:left;
+  box-shadow:0 3px 8px rgba(0,0,0,.3);
+  border:2px solid var(--border);
+}
+
+.verse-text{
+  font-size:1.1rem;
+  line-height:1.8;
+  text-align:justify;
+  color:var(--ink);
+}
+
+.illuminated-initial{
+  float:left;
+  font-family:'IM Fell English',serif;
+  font-size:4rem;
+  line-height:.75;
+  color:var(--red);
+  margin-right:12px;
+  margin-top:5px;
+  padding:8px 12px;
+  border:2px solid var(--gold);
+  text-shadow:2px 2px 4px rgba(0,0,0,.3);
+}
+
+/* LOADING & WELCOME */
+.loading,.welcome{
+  text-align:center;
+  padding:60px 20px;
+  color:var(--ink-fade);
+}
+
+.spinner{
+  width:45px;
+  height:45px;
+  border:4px solid rgba(139,111,71,.3);
+  border-top:4px solid var(--gold);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 18px;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+.welcome-cross{
+  font-size:4rem;
+  color:var(--gold);
+  margin-bottom:25px;
+}
+
+.welcome h2{
+  font-family:'IM Fell English',serif;
+  font-size:2rem;
+  color:var(--red);
+  margin-bottom:15px;
+}
+
+.welcome p{
+  font-size:1.05rem;
+  font-style:italic;
+  line-height:1.7;
+}
+
+.storage-bar{
+  padding:10px;
+  border-top:1px solid var(--border);
+  font-size:.7rem;
+  color:var(--ink-fade);
+  margin-top:15px;
+}
+
+.storage-label{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:5px;
+}
+
+.storage-track{
+  height:3px;
+  background:rgba(0,0,0,.15);
+  border-radius:2px;
+  overflow:hidden;
+}
+
+.storage-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--gold),var(--gold-bright));
+  transition:width .5s;
+}
+
+.re-dl-btn{
+  display:block;
+  margin-top:8px;
+  font-size:.65rem;
+  cursor:pointer;
+  text-decoration:underline;
+  opacity:.6;
+}
+
+.re-dl-btn:hover{opacity:1;color:var(--gold)}
+
+/* MOBILE */
+@media (max-width:1024px){
+  .scroll-left,.scroll-right{width:50px}
+  .parchment-page{margin:0 55px;padding:35px 40px}
+  .book-sidebar{left:50px;width:240px}
+  .main-content{margin-left:260px}
+}
+
+@media (max-width:768px){
+  .scroll-left,.scroll-right{display:none}
+  .parchment-page{margin:0;padding:20px 15px}
+  
+  .menu-btn{display:block}
+  
+  .book-sidebar{
+    left:-100%;
+    width:280px;
+  }
+  
+  .book-sidebar.open{
+    left:0;
+  }
+  
+  .main-content{margin-left:0}
+  
+  .manuscript-title{font-size:1.8rem}
+  .illuminated-initial{font-size:3rem}
+  
+  .chapter-grid{
+    grid-template-columns:repeat(auto-fill,minmax(40px,1fr));
+  }
+  
+  .trans-buttons{
+    width:100%;
+    justify-content:center;
+  }
+}
+
+@media (max-width:480px){
+  .parchment-page{padding:15px 10px}
+  .manuscript-title{font-size:1.5rem}
+  .verse-text{font-size:1rem}
+  
+  .dl-box{padding:25px 20px}
+  .dl-title{font-size:1.4rem}
+}
+</style>
+</head>
+<body>
+
+<!-- OVERLAY DOWNLOAD -->
+<div id="dlOverlay">
+  <div id="dlSetup" class="dl-box">
+    <div class="dl-cross">✠</div>
+    <div class="dl-title">Sancta Scriptura</div>
+    <div class="dl-sub">Unduh Firman Kudus untuk akses offline</div>
+    
+    <div class="dl-ver-label">Pilih Terjemahan</div>
+    <div class="dl-ver-row">
+      <button class="dl-ver-btn sel" data-ver="tb">TB</button>
+      <button class="dl-ver-btn" data-ver="tl">TL</button>
+      <button class="dl-ver-btn" data-ver="jawa">Jawa</button>
+    </div>
+    
+    <button class="dl-start-btn" onclick="startDownload()">Mulai Unduh</button>
+    <div class="dl-skip" onclick="skipDownload()">Lewati (Online saja)</div>
+  </div>
+  
+  <div id="dlProgress" class="dl-box dl-progress">
+    <div class="dl-prog-title">Mengunduh...</div>
+    <div class="dl-prog-book" id="dlBookName"></div>
+    
+    <div class="prog-track">
+      <div class="prog-fill" id="dlProgFill"></div>
+    </div>
+    <div class="prog-nums">
+      <span id="dlProgCurrent">0</span>
+      <span id="dlProgTotal">0</span>
+    </div>
+    
+    <div class="dl-ver-progress" id="dlVerProgress"></div>
+    
+    <div class="dl-cancel" onclick="cancelDownload()">Batalkan</div>
+    <button class="dl-done-btn" id="dlDoneBtn" onclick="finishDownload()">Selesai</button>
+    <div class="dl-err" id="dlErr"></div>
+  </div>
+</div>
+
+<!-- GULUNGAN -->
+<div class="scroll-left">
+  <div class="scroll-ornament top"></div>
+  <div class="scroll-ornament bottom"></div>
+</div>
+
+<div class="scroll-right">
+  <div class="scroll-ornament top"></div>
+  <div class="scroll-ornament bottom"></div>
+</div>
+
+<div id="theApp" style="display:none">
+  <div class="manuscript-container">
+    <div class="parchment-page">
+      
+      <div class="manuscript-header">
+        <div class="manuscript-title">Sancta Scriptura</div>
+        <div class="manuscript-subtitle">Firman Yang Kekal</div>
+      </div>
+      
+      <div class="top-bar">
+        <button class="menu-btn" onclick="toggleSidebar()">☰ Menu</button>
+        
+        <div class="breadcrumb">
+          <span>Alkitab</span>
+          <span id="bcSep" style="display:none">›</span>
+          <span id="bcBook"></span>
+          <span id="bcSep2" style="display:none">›</span>
+          <span class="bc-cur" id="bcChap"></span>
+        </div>
+        
+        <div class="trans-buttons">
+          <button class="trans-btn active" data-ver="tb" onclick="switchTranslation('tb')">
+            TB
+            <span class="dl-dot ready"></span>
+          </button>
+          <button class="trans-btn" data-ver="tl" onclick="switchTranslation('tl')">
+            TL
+            <span class="dl-dot missing"></span>
+          </button>
+          <button class="trans-btn" data-ver="jawa" onclick="switchTranslation('jawa')">
+            Jawa
+            <span class="dl-dot missing"></span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="book-sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">Biblia Sacra</div>
+          <div class="sidebar-subtitle">Kitab Suci</div>
+        </div>
+        
+        <div class="testament-tabs">
+          <button class="tab-btn active" onclick="showTestament('pl',this)">PL</button>
+          <button class="tab-btn" onclick="showTestament('pb',this)">PB</button>
+        </div>
+        
+        <input type="text" class="search-input" placeholder="Cari kitab..." oninput="filterBooks(this.value)"/>
+        
+        <div class="book-list" id="bookList"></div>
+        
+        <div class="storage-bar">
+          <div class="storage-label">
+            <span>Storage</span>
+            <span id="storageText">0 MB</span>
+          </div>
+          <div class="storage-track">
+            <div class="storage-fill" id="storageFill"></div>
+          </div>
+          <div class="re-dl-btn" onclick="reDownload()">⟳ Unduh Ulang</div>
+        </div>
+      </div>
+      
+      <div class="main-content">
+        <div id="content">
+          <div class="welcome">
+            <div class="welcome-cross">✠</div>
+            <h2>In Nomine Patris</h2>
+            <p>Pilihlah kitab di sebelah kiri untuk membaca Firman Kudus</p>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<script>
+const BOOKS={
+  pl:[
+    {id:'gen',name:'Kejadian',ch:50},{id:'exo',name:'Keluaran',ch:40},{id:'lev',name:'Imamat',ch:27},
+    {id:'num',name:'Bilangan',ch:36},{id:'deu',name:'Ulangan',ch:34},{id:'jos',name:'Yosua',ch:24},
+    {id:'jdg',name:'Hakim-hakim',ch:21},{id:'rut',name:'Rut',ch:4},{id:'1sa',name:'1 Samuel',ch:31},
+    {id:'2sa',name:'2 Samuel',ch:24},{id:'1ki',name:'1 Raja-raja',ch:22},{id:'2ki',name:'2 Raja-raja',ch:25},
+    {id:'1ch',name:'1 Tawarikh',ch:29},{id:'2ch',name:'2 Tawarikh',ch:36},{id:'ezr',name:'Ezra',ch:10},
+    {id:'neh',name:'Nehemia',ch:13},{id:'est',name:'Ester',ch:10},{id:'job',name:'Ayub',ch:42},
+    {id:'psa',name:'Mazmur',ch:150},{id:'pro',name:'Amsal',ch:31},{id:'ecc',name:'Pengkhotbah',ch:12},
+    {id:'sng',name:'Kidung Agung',ch:8},{id:'isa',name:'Yesaya',ch:66},{id:'jer',name:'Yeremia',ch:52},
+    {id:'lam',name:'Ratapan',ch:5},{id:'ezk',name:'Yehezkiel',ch:48},{id:'dan',name:'Daniel',ch:12},
+    {id:'hos',name:'Hosea',ch:14},{id:'jol',name:'Yoel',ch:3},{id:'amo',name:'Amos',ch:9},
+    {id:'oba',name:'Obaja',ch:1},{id:'jon',name:'Yunus',ch:4},{id:'mic',name:'Mikha',ch:7},
+    {id:'nam',name:'Nahum',ch:3},{id:'hab',name:'Habakuk',ch:3},{id:'zep',name:'Zefanya',ch:3},
+    {id:'hag',name:'Hagai',ch:2},{id:'zec',name:'Zakharia',ch:14},{id:'mal',name:'Maleakhi',ch:4}
+  ],
+  pb:[
+    {id:'mat',name:'Matius',ch:28},{id:'mrk',name:'Markus',ch:16},{id:'luk',name:'Lukas',ch:24},
+    {id:'jhn',name:'Yohanes',ch:21},{id:'act',name:'Kisah Para Rasul',ch:28},{id:'rom',name:'Roma',ch:16},
+    {id:'1co',name:'1 Korintus',ch:16},{id:'2co',name:'2 Korintus',ch:13},{id:'gal',name:'Galatia',ch:6},
+    {id:'eph',name:'Efesus',ch:6},{id:'php',name:'Filipi',ch:4},{id:'col',name:'Kolose',ch:4},
+    {id:'1th',name:'1 Tesalonika',ch:5},{id:'2th',name:'2 Tesalonika',ch:3},{id:'1ti',name:'1 Timotius',ch:6},
+    {id:'2ti',name:'2 Timotius',ch:4},{id:'tit',name:'Titus',ch:3},{id:'phm',name:'Filemon',ch:1},
+    {id:'heb',name:'Ibrani',ch:13},{id:'jas',name:'Yakobus',ch:5},{id:'1pe',name:'1 Petrus',ch:5},
+    {id:'2pe',name:'2 Petrus',ch:3},{id:'1jn',name:'1 Yohanes',ch:5},{id:'2jn',name:'2 Yohanes',ch:1},
+    {id:'3jn',name:'3 Yohanes',ch:1},{id:'jud',name:'Yudas',ch:1},{id:'rev',name:'Wahyu',ch:22}
+  ]
+};
+
+const ALL_BOOKS=[...BOOKS.pl,...BOOKS.pb].map((b,i)=>({...b,num:i+1}));
+// bolls.life: TB pakai id string (gen,exo,...), TL pakai id angka (1,2,...)
+const WLDEH_API='https://cdn.jsdelivr.net/gh/wldeh/bible-api/bibles';
+// Mapping id buku ke nama lowercase untuk wldeh API
+const BOOK_NAME_EN={
+  gen:'genesis',exo:'exodus',lev:'leviticus',num:'numbers',deu:'deuteronomy',
+  jos:'joshua',jdg:'judges',rut:'ruth','1sa':'1-samuel','2sa':'2-samuel',
+  '1ki':'1-kings','2ki':'2-kings','1ch':'1-chronicles','2ch':'2-chronicles',
+  ezr:'ezra',neh:'nehemiah',est:'esther',job:'job',psa:'psalms',pro:'proverbs',
+  ecc:'ecclesiastes',sng:'song-of-solomon',isa:'isaiah',jer:'jeremiah',lam:'lamentations',
+  ezk:'ezekiel',dan:'daniel',hos:'hosea',jol:'joel',amo:'amos',oba:'obadiah',
+  jon:'jonah',mic:'micah',nam:'nahum',hab:'habakkuk',zep:'zephaniah',hag:'haggai',
+  zec:'zechariah',mal:'malachi',mat:'matthew',mrk:'mark',luk:'luke',
+  jhn:'john',act:'acts',rom:'romans','1co':'1-corinthians','2co':'2-corinthians',
+  gal:'galatians',eph:'ephesians',php:'philippians',col:'colossians','1th':'1-thessalonians',
+  '2th':'2-thessalonians','1ti':'1-timothy','2ti':'2-timothy',tit:'titus',phm:'philemon',
+  heb:'hebrews',jas:'james','1pe':'1-peter','2pe':'2-peter','1jn':'1-john',
+  '2jn':'2-john','3jn':'3-john',jud:'jude',rev:'revelation'
+};
+// Mapping id buku ke singkatan Indonesia untuk beeble API (TL & Jawa)
+const BOOK_ABBR_ID={
+  gen:'Kej',exo:'Kel',lev:'Im',num:'Bil',deu:'Ul',
+  jos:'Yos',jdg:'Hak',rut:'Rut','1sa':'1Sam','2sa':'2Sam',
+  '1ki':'1Raj','2ki':'2Raj','1ch':'1Taw','2ch':'2Taw',
+  ezr:'Ezr',neh:'Neh',est:'Est',job:'Ayb',psa:'Mzm',pro:'Ams',
+  ecc:'Pkh',sng:'Kid',isa:'Yes',jer:'Yer',lam:'Rat',
+  ezk:'Yeh',dan:'Dan',hos:'Hos',jol:'Yoel',amo:'Am',oba:'Ob',
+  jon:'Yun',mic:'Mi',nam:'Nah',hab:'Hab',zep:'Zef',hag:'Hag',
+  zec:'Za',mal:'Mal',mat:'Mat',mrk:'Mrk',luk:'Luk',
+  jhn:'Yoh',act:'Kis',rom:'Rom','1co':'1Kor','2co':'2Kor',
+  gal:'Gal',eph:'Ef',php:'Flp',col:'Kol','1th':'1Tes',
+  '2th':'2Tes','1ti':'1Tim','2ti':'2Tim',tit:'Tit',phm:'Flm',
+  heb:'Ibr',jas:'Yak','1pe':'1Pet','2pe':'2Pet','1jn':'1Yoh',
+  '2jn':'2Yoh','3jn':'3Yoh',jud:'Yud',rev:'Why'
+};
+// Mapping id buku ke nama Indonesia untuk beeble API (TL)
+const BOOK_NAME_ID={
+  gen:'Kejadian',exo:'Keluaran',lev:'Imamat',num:'Bilangan',deu:'Ulangan',
+  jos:'Yosua',jdg:'Hakim-hakim',rut:'Rut','1sa':'1Samuel','2sa':'2Samuel',
+  '1ki':'1Raja-raja','2ki':'2Raja-raja','1ch':'1Tawarikh','2ch':'2Tawarikh',
+  ezr:'Ezra',neh:'Nehemia',est:'Ester',job:'Ayub',psa:'Mazmur',pro:'Amsal',
+  ecc:'Pengkhotbah',sng:'Kidung Agung',isa:'Yesaya',jer:'Yeremia',lam:'Ratapan',
+  ezk:'Yehezkiel',dan:'Daniel',hos:'Hosea',jol:'Yoel',amo:'Amos',oba:'Obaja',
+  jon:'Yunus',mic:'Mikha',nam:'Nahum',hab:'Habakuk',zep:'Zefanya',hag:'Hagai',
+  zec:'Zakharia',mal:'Maleakhi',mat:'Matius',mrk:'Markus',luk:'Lukas',
+  jhn:'Yohanes',act:'Kisah Para Rasul',rom:'Roma','1co':'1Korintus','2co':'2Korintus',
+  gal:'Galatia',eph:'Efesus',php:'Filipi',col:'Kolose','1th':'1Tesalonika',
+  '2th':'2Tesalonika','1ti':'1Timotius','2ti':'2Timotius',tit:'Titus',phm:'Filemon',
+  heb:'Ibrani',jas:'Yakobus','1pe':'1Petrus','2pe':'2Petrus','1jn':'1Yohanes',
+  '2jn':'2Yohanes','3jn':'3Yohanes',jud:'Yudas',rev:'Wahyu'
+};
+let currentTranslation='tb';
+let currentTestament='pl';
+let currentBook=null;
+let currentChapter=1;
+let downloadCancelled=false;
+let selectedVersions=['tb'];
+
+// LOCALSTORAGE
+const LS_PREFIX='bible_';
+const LS_META='bible_meta';
+
+function saveMeta(meta){localStorage.setItem(LS_META,JSON.stringify(meta))}
+function getMeta(){
+  try{return JSON.parse(localStorage.getItem(LS_META))||{}}
+  catch{return{}}
+}
+
+function lsSave(ver,book,ch,verses){
+  try{
+    localStorage.setItem(`${LS_PREFIX}${ver}_${book}_${ch}`,JSON.stringify(verses));
+    dbg(`OK lsSave`,{ver,book,ch,jumlah_ayat:verses.length});
+    return true;
+  }catch(e){
+    dbg(`ERR lsSave`,{ver,book,ch,error:e.message});
+    return false;
+  }
+}
+
+function lsLoad(ver,book,ch){
+  try{
+    const d=localStorage.getItem(`${LS_PREFIX}${ver}_${book}_${ch}`);
+    const result=d?JSON.parse(d):null;
+    dbg(`lsLoad`,{ver,book,ch,found:!!result,jumlah_ayat:result?result.length:0});
+    return result;
+  }catch(e){
+    dbg(`ERR lsLoad`,{ver,book,ch,error:e.message});
+    return null;
+  }
+}
+
+function lsClear(){
+  Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith(LS_PREFIX)||k===LS_META) localStorage.removeItem(k);
+  });
+}
+
+function updateStorageBar(){
+  let total=0;
+  Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith(LS_PREFIX)) total+=localStorage.getItem(k).length;
+  });
+  const mb=(total/1024/1024).toFixed(2);
+  document.getElementById('storageText').textContent=mb+' MB';
+  document.getElementById('storageFill').style.width=Math.min(total/5000000*100,100)+'%';
+}
+
+function updateDots(){
+  const meta=getMeta();
+  document.querySelectorAll('.trans-btn').forEach(btn=>{
+    const ver=btn.dataset.ver;
+    const dot=btn.querySelector('.dl-dot');
+    if(!dot)return;
+    if(meta[ver]){
+      dot.className='dl-dot ready';
+    }else{
+      dot.className='dl-dot missing';
+    }
+  });
+}
+
+// DOWNLOAD UI
+document.querySelectorAll('.dl-ver-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    const isSelected=this.classList.contains('sel');
+    if(isSelected){
+      if(document.querySelectorAll('.dl-ver-btn.sel').length>1){
+        this.classList.remove('sel');
+      }
+    }else{
+      this.classList.add('sel');
+    }
+  });
+});
+
+function skipDownload(){
+  document.getElementById('dlOverlay').classList.add('hidden');
+  document.getElementById('theApp').style.display='block';
+  renderBookList('pl');
+  updateDots();
+  updateStorageBar();
+}
+
+async function startDownload(){
+  selectedVersions=Array.from(document.querySelectorAll('.dl-ver-btn.sel')).map(b=>b.dataset.ver);
+  if(!selectedVersions.length){alert('Pilih minimal 1 terjemahan');return}
+  
+  document.getElementById('dlSetup').style.display='none';
+  document.getElementById('dlProgress').classList.add('show');
+  
+  downloadCancelled=false;
+  
+  const verProg=document.getElementById('dlVerProgress');
+  verProg.innerHTML=selectedVersions.map(v=>`
+    <div class="ver-prog-row">
+      <div class="ver-prog-label">${v.toUpperCase()}</div>
+      <div class="ver-prog-track">
+        <div class="ver-prog-fill ${v}" id="prog_${v}"></div>
+      </div>
+      <div class="ver-prog-num" id="num_${v}">0/66</div>
+    </div>
+  `).join('');
+  
+  let allSuccess=true;
+  
+  for(const ver of selectedVersions){
+    if(downloadCancelled)break;
+    const success=await downloadVersion(ver);
+    if(!success)allSuccess=false;
+  }
+  
+  if(!downloadCancelled && allSuccess){
+    document.getElementById('dlDoneBtn').classList.add('show');
+    document.getElementById('dlProgFill').style.width='100%';
+    document.getElementById('dlBookName').textContent='Download selesai!';
+  }
+}
+
+async function downloadVersion(ver){
+  const total=ALL_BOOKS.length;
+  let done=0;
+  const verName={tb:'TB',tl:'TL',jawa:'Jawa'}[ver];
+  
+  for(const book of ALL_BOOKS){
+    if(downloadCancelled)return false;
+    
+    document.getElementById('dlBookName').textContent=`${verName}: ${book.name}`;
+    
+    for(let ch=1;ch<=book.ch;ch++){
+      if(downloadCancelled)return false;
+      
+      try{
+        let verses=null;
+        if(ver==='tl'){
+          // TL: beeble.vercel.app
+          const bookName=BOOK_NAME_ID[book.id]||book.name;
+          const url=`https://beeble.vercel.app/api/v1/passage/${encodeURIComponent(bookName)}/${ch}?ver=tl`;
+          dbg(`FETCH downloadVersion TL`,{url,ver,book:book.id,ch});
+          const res=await fetch(url);
+          dbg(`RESP downloadVersion TL`,{status:res.status,ok:res.ok});
+          if(!res.ok)throw new Error(`HTTP ${res.status}`);
+          const data=await res.json();
+          dbg(`JSON downloadVersion TL`,{ver,book:book.id,ch,sample:JSON.stringify(data).substring(0,200)});
+          const raw=data.verses||data.data||data;
+          verses=Array.isArray(raw)?raw.map((v,i)=>({
+            pk:i+1,verse:parseInt(v.verse)||i+1,text:v.content||v.text||''
+          })):null;
+        } else if(ver==='jawa'){
+          // JAWA: beeble.vercel.app dengan ?ver=jawa
+          const abbr=BOOK_ABBR_ID[book.id]||book.name;
+          const url=`https://beeble.vercel.app/api/v1/passage/${encodeURIComponent(abbr)}/${ch}?ver=jawa`;
+          dbg(`FETCH downloadVersion JAWA`,{url,ver,book:book.id,ch});
+          const res=await fetch(url);
+          dbg(`RESP downloadVersion JAWA`,{status:res.status,ok:res.ok});
+          if(!res.ok)throw new Error(`HTTP ${res.status}`);
+          const data=await res.json();
+          dbg(`JSON downloadVersion JAWA`,{ver,book:book.id,ch,sample:JSON.stringify(data).substring(0,300)});
+          const raw=data.verses||data.data||data;
+          verses=Array.isArray(raw)?raw.map((v,i)=>({
+            pk:i+1,verse:parseInt(v.verse)||i+1,text:v.content||v.text||''
+          })):null;
+        } else {
+          const url=`https://bolls.life/get-chapter/${ver.toUpperCase()}/${book.id}/${ch}/`;
+          dbg(`FETCH downloadVersion TB`,{url,ver,book:book.id,ch});
+          const res=await fetch(url);
+          dbg(`RESP downloadVersion TB`,{status:res.status,ok:res.ok,url});
+          if(!res.ok)throw new Error(`HTTP ${res.status}`);
+          const data=await res.json();
+          dbg(`JSON downloadVersion TB`,{ver,book:book.id,ch,data:JSON.stringify(data)});
+          verses=Array.isArray(data)?data:(data.verses||null);
+        }
+        if(verses&&verses.length){
+          lsSave(ver,book.id,ch,verses);
+        }else{
+          dbg(`ERR downloadVersion - tidak ada ayat`,{ver,book:book.id,ch});
+        }
+      }catch(err){
+        dbg(`ERR downloadVersion`,{ver,book:book.id,ch,error:err.message,stack:err.stack});
+        document.getElementById('dlErr').textContent='Error: '+err.message;
+        return false;
+      }
+      
+      await new Promise(r=>setTimeout(r,50));
+    }
+    
+    done++;
+    const pct=(done/total*100).toFixed(0);
+    document.getElementById(`prog_${ver}`).style.width=pct+'%';
+    document.getElementById(`num_${ver}`).textContent=`${done}/${total}`;
+    document.getElementById('dlProgCurrent').textContent=done;
+    document.getElementById('dlProgTotal').textContent=total;
+    document.getElementById('dlProgFill').style.width=pct+'%';
+  }
+  
+  const meta=getMeta();
+  meta[ver]=true;
+  saveMeta(meta);
+  
+  return true;
+}
+
+function cancelDownload(){
+  downloadCancelled=true;
+  skipDownload();
+}
+
+function finishDownload(){
+  document.getElementById('dlOverlay').classList.add('hidden');
+  document.getElementById('theApp').style.display='block';
+  renderBookList('pl');
+  updateDots();
+  updateStorageBar();
+  
+  const meta=getMeta();
+  if(meta.tb)currentTranslation='tb';
+  else if(meta.tl)currentTranslation='tl';
+  else currentTranslation='jawa';
+  
+  document.querySelectorAll('.trans-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.ver===currentTranslation);
+  });
+}
+
+function reDownload(){
+  if(!confirm('Hapus semua data dan download ulang?'))return;
+  lsClear();
+  location.reload();
+}
+
+// APP
+function renderBookList(testament,filter=''){
+  const list=BOOKS[testament];
+  const q=filter.toLowerCase();
+  const filtered=!q?list:list.filter(b=>b.name.toLowerCase().includes(q));
+  
+  document.getElementById('bookList').innerHTML=filtered.map(b=>`
+    <div class="book-item${currentBook&&currentBook.id===b.id?' active':''}" onclick="selectBook('${b.id}')">
+      <span>${b.name}</span>
+      <span class="book-chapters">${b.ch}</span>
+    </div>
+  `).join('');
+}
+
+function showTestament(t,btn){
+  currentTestament=t;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBookList(t);
+}
+
+function filterBooks(q){
+  renderBookList(currentTestament,q);
+}
+
+function selectBook(id){
+  currentBook=ALL_BOOKS.find(b=>b.id===id);
+  if(!currentBook)return;
+  currentChapter=1;
+  loadChapter();
+}
+
+function switchTranslation(ver){
+  currentTranslation=ver;
+  document.querySelectorAll('.trans-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.ver===ver);
+  });
+  if(currentBook)loadChapter();
+}
+
+async function getVerses(ver,book,ch){
+  dbg(`getVerses dipanggil`,{ver,book:book.id,ch});
+  const local=lsLoad(ver,book.id,ch);
+  if(local){
+    dbg(`OK getVerses - dari cache`,{ver,book:book.id,ch,jumlah:local.length});
+    return{verses:local,fromLocal:true};
+  }
+  
+  let verses=null;
+  
+  if(ver==='tl'){
+    // TL: beeble.vercel.app
+    const bookName=BOOK_NAME_ID[book.id]||book.name;
+    const url=`https://beeble.vercel.app/api/v1/passage/${encodeURIComponent(bookName)}/${ch}?ver=tl`;
+    dbg(`FETCH getVerses TL`,{url});
+    const res=await fetch(url);
+    dbg(`RESP getVerses TL`,{status:res.status,ok:res.ok});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    dbg(`JSON getVerses TL`,{ver,book:book.id,ch,sample:JSON.stringify(data).substring(0,200)});
+    const raw=data.verses||data.data||data;
+    verses=Array.isArray(raw)?raw.map((v,i)=>({
+      pk:i+1,verse:parseInt(v.verse)||i+1,text:v.content||v.text||''
+    })):null;
+  } else if(ver==='jawa'){
+    // JAWA: beeble.vercel.app dengan ?ver=jawa
+    const abbr=BOOK_ABBR_ID[book.id]||book.name;
+    const url=`https://beeble.vercel.app/api/v1/passage/${encodeURIComponent(abbr)}/${ch}?ver=jawa`;
+    dbg(`FETCH getVerses JAWA`,{url});
+    const res=await fetch(url);
+    dbg(`RESP getVerses JAWA`,{status:res.status,ok:res.ok});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    dbg(`JSON getVerses JAWA`,{ver,book:book.id,ch,sample:JSON.stringify(data).substring(0,300)});
+    const raw=data.verses||data.data||data;
+    verses=Array.isArray(raw)?raw.map((v,i)=>({
+      pk:i+1,verse:parseInt(v.verse)||i+1,text:v.content||v.text||''
+    })):null;
+  } else {
+    // TB: bolls.life API
+    const url=`https://bolls.life/get-chapter/${ver.toUpperCase()}/${book.id}/${ch}/`;
+    dbg(`FETCH getVerses TB`,{url});
+    const res=await fetch(url);
+    dbg(`RESP getVerses TB`,{status:res.status,ok:res.ok});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    dbg(`JSON getVerses TB`,{ver,book:book.id,ch,data:JSON.stringify(data)});
+    verses=Array.isArray(data)?data:(data.verses||null);
+  }
+  
+  if(!verses||!verses.length)throw new Error('Tidak dapat memuat ayat');
+  dbg(`OK getVerses - dari API`,{ver,book:book.id,ch,jumlah:verses.length});
+  return{verses,fromLocal:false};
+}
+
+function renderChapterGrid(book){
+  const grid=document.getElementById('chapterGrid');
+  if(!grid)return;
+  let html='';
+  for(let i=1;i<=book.ch;i++){
+    html+=`<button class="ch-btn${i===currentChapter?' active':''}" onclick="loadChapterById('${book.id}',${i})">${i}</button>`;
+  }
+  grid.innerHTML=html;
+}
+
+async function loadChapter(){
+  if(!currentBook)return;
+  
+  document.getElementById('bcSep').style.display='';
+  document.getElementById('bcBook').textContent=currentBook.name;
+  document.getElementById('bcSep2').style.display='';
+  document.getElementById('bcChap').textContent='Pasal '+currentChapter;
+  
+  document.querySelectorAll('.book-item').forEach(el=>{
+    el.classList.toggle('active',el.textContent.trim().startsWith(currentBook.name));
+  });
+  
+  const content=document.getElementById('content');
+  content.innerHTML=`
+    <div class="chapter-nav">
+      <button class="nav-btn" onclick="prevChapter()" ${currentChapter<=1?'disabled':''}>← Sebelumnya</button>
+      <span class="chapter-indicator">Pasal ${currentChapter}</span>
+      <button class="nav-btn" onclick="nextChapter()" ${currentChapter>=currentBook.ch?'disabled':''}>Selanjutnya →</button>
+    </div>
+    <div id="chapterGrid" class="chapter-grid"></div>
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Membuka gulungan suci...</p>
+    </div>
+  `;
+  
+  renderChapterGrid(currentBook);
+  
+  try{
+    const {verses,fromLocal}=await getVerses(currentTranslation,currentBook,currentChapter);
+    renderVerses(verses);
+  }catch(err){
+    dbg(`ERR loadChapter`,{error:err.message,stack:err.stack,book:currentBook?.id,ch:currentChapter,ver:currentTranslation});
+    content.innerHTML+=`<p style="color:var(--red);text-align:center;margin-top:30px">⚠ ${err.message}</p>`;
+  }
+  
+  if(window.innerWidth<=768){
+    document.getElementById('sidebar').classList.remove('open');
+  }
+}
+
+function renderVerses(verses){
+  const content=document.getElementById('content');
+  
+  let html=`
+    <div class="chapter-nav">
+      <button class="nav-btn" onclick="prevChapter()" ${currentChapter<=1?'disabled':''}>← Sebelumnya</button>
+      <span class="chapter-indicator">Pasal ${currentChapter}</span>
+      <button class="nav-btn" onclick="nextChapter()" ${currentChapter>=currentBook.ch?'disabled':''}>Selanjutnya →</button>
+    </div>
+    <div id="chapterGrid" class="chapter-grid"></div>
+    <div class="chapter-title-main">${currentBook.name} Pasal ${currentChapter}</div>
+  `;
+  
+  verses.forEach((v,i)=>{
+    const delay=i*0.04;
+    html+=`
+      <div class="verse-container" style="animation-delay:${delay}s">
+        ${i===0?'<span class="illuminated-initial">'+v.text.charAt(0)+'</span>':''}
+        <span class="verse-number">${v.verse}</span>
+        <span class="verse-text">${i===0?v.text.slice(1):v.text}</span>
+      </div>
+    `;
+  });
+  
+  content.innerHTML=html;
+  renderChapterGrid(currentBook);
+}
+
+function nextChapter(){
+  if(currentChapter<currentBook.ch){
+    currentChapter++;
+    loadChapter();
+  }
+}
+
+function prevChapter(){
+  if(currentChapter>1){
+    currentChapter--;
+    loadChapter();
+  }
+}
+
+function loadChapterById(id,ch){
+  const book=ALL_BOOKS.find(b=>b.id===id);
+  if(!book)return;
+  currentBook=book;
+  currentChapter=ch;
+  loadChapter();
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// INIT
+(function(){
+  const meta=getMeta();
+  const hasData=meta.tb||meta.tl||meta.jawa;
+  
+  if(hasData){
+    document.getElementById('dlOverlay').classList.add('hidden');
+    document.getElementById('theApp').style.display='block';
+    renderBookList('pl');
+    updateDots();
+    updateStorageBar();
+    
+    if(meta.tb)currentTranslation='tb';
+    else if(meta.tl)currentTranslation='tl';
+    else currentTranslation='jawa';
+    
+    document.querySelectorAll('.trans-btn').forEach(b=>{
+      b.classList.toggle('active',b.dataset.ver===currentTranslation);
+    });
+  }else{
+    document.getElementById('dlOverlay').classList.remove('hidden');
+    document.getElementById('dlSetup').style.display='block';
+    document.getElementById('theApp').style.display='none';
+  }
+})();
+</script>
+
+  <!-- DEBUG PANEL -->
+  <div id="debugPanel" style="position:fixed;bottom:0;left:0;right:0;max-height:220px;overflow-y:auto;background:#111;color:#0f0;font:12px monospace;padding:8px;z-index:9999;border-top:2px solid #0f0;display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <strong style="color:#ff0">🐛 DEBUG LOG</strong>
+      <div>
+        <button onclick="(()=>{const t=document.getElementById('debugLog').innerText;navigator.clipboard.writeText(t).then(()=>{const b=event.target;b.textContent='✓ Tersalin!';setTimeout(()=>b.textContent='Salin',1500)}).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);const b=event.target;b.textContent='✓ Tersalin!';setTimeout(()=>b.textContent='Salin',1500)})})()" style="background:#333;color:#0f0;border:1px solid #0f0;padding:2px 8px;cursor:pointer;margin-right:4px;">Salin</button>
+        <button onclick="document.getElementById('debugLog').innerHTML=''" style="background:#333;color:#fff;border:1px solid #555;padding:2px 8px;cursor:pointer;margin-right:4px;">Clear</button>
+        <button onclick="document.getElementById('debugPanel').style.display='none'" style="background:#333;color:#fff;border:1px solid #555;padding:2px 8px;cursor:pointer;">✕</button>
+      </div>
+    </div>
+    <div id="debugLog"></div>
+  </div>
+  <button onclick="document.getElementById('debugPanel').style.display=document.getElementById('debugPanel').style.display==='none'?'block':'none'" style="position:fixed;bottom:8px;right:8px;z-index:10000;background:#222;color:#0f0;border:1px solid #0f0;padding:4px 10px;font:11px monospace;cursor:pointer;">🐛 DEBUG</button>
+
+  <script>
+  // Debug helper
+  function dbg(label, data){
+    const panel=document.getElementById('debugLog');
+    if(!panel)return;
+    const ts=new Date().toISOString().substr(11,12);
+    const str=data===undefined?'':(typeof data==='string'?data:JSON.stringify(data,null,2));
+    const color=label.startsWith('ERR')?'#f66':label.startsWith('OK')?'#6f6':'#fff';
+    panel.innerHTML+=`<div style="border-bottom:1px solid #333;padding:2px 0"><span style="color:#888">[${ts}]</span> <span style="color:${color}">${label}</span>${str?`<pre style="margin:2px 0 2px 12px;color:#cfc;white-space:pre-wrap;word-break:break-all">${str}</pre>`:''}</div>`;
+    panel.scrollTop=panel.scrollHeight;
+    console.log(`[DBG] ${label}`, data);
+  }
+  </script>
+</body>
+</html>
